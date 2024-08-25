@@ -52,7 +52,7 @@ export const CharacterList: React.FC = () => {
   if (error) return <p>{error}</p>;
 
   return (
-    <Container sx={{ paddingTop: 4, backgroundColor: 'transparent'  }}>
+    <Container sx={{ paddingTop: 4, backgroundColor: 'transparent' }}>
       <Grid container spacing={4}>
         {characters.map((character, index) => (
           <Grid item xs={12} sm={4} key={index}>
@@ -63,7 +63,7 @@ export const CharacterList: React.FC = () => {
         ))}
       </Grid>
       {loading && !error && <Typography variant="h5" component="div" gutterBottom>
-        {'Cargando más...'}
+        {`Cargando más ${totalPages}`}
       </Typography>}
     </Container>
   );
