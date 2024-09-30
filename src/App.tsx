@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CssBaseline } from '@mui/material';
-import { Home } from './screens/Home/Home';
+import { Crud, DragonBall, Home } from './screens';
 
 const App: React.FC = () => {
   return (
@@ -10,6 +10,8 @@ const App: React.FC = () => {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/dragonBall" element={<DragonBall />} />
+          <Route path="/crud" element={<Crud />} />
         </Routes>
       </Router>
     </>
