@@ -41,14 +41,6 @@ export const Crud = () => {
     setTasks((prev) => prev.filter((task) => task.id !== id));
   };
 
-  const editTask = (id: string, newText: string) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id ? { ...task, text: newText, isEditing: false } : task
-      )
-    );
-  };
-
   const toggleEdit = (id: string, currentText: string) => {
     setTasks((prev) =>
       prev.map((task) =>
