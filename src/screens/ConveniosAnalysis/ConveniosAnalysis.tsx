@@ -8,7 +8,25 @@ import {
   CheckCircle,
   Clock,
   FileText,
+  Folder,
+  ExternalLink,
+  PieChart,
 } from "lucide-react";
+import {
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+} from "recharts";
+
+import {
+  EjecucionConvenio,
+  ejecucionConveniosData,
+  GestionInterventoria,
+  gestionInterventorias,
+} from "./ejecucionConveniosData";
 
 interface Convenio {
   id: number;
@@ -41,6 +59,32 @@ export const ConveniosAnalysis: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedCard, setSelectedCard] = useState<Convenio | null>(null);
+  const [selectedEjecucionCard, setSelectedEjecucionCard] =
+    useState<EjecucionConvenio | null>(null);
+
+  const [selectedGestionCard, setSelectedGestionCard] =
+    useState<GestionInterventoria | null>(null);
+
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const filteredEjecucionConvenios = useMemo(() => {
+    return ejecucionConveniosData.filter((convenio) => {
+      const matchesSearch =
+        searchTerm === "" ||
+        convenio.oac.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        convenio.municipio.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        convenio.convenio.includes(searchTerm) ||
+        convenio.opcDotacion.toLowerCase().includes(searchTerm.toLowerCase());
+
+      return matchesSearch;
+    });
+  }, [searchTerm, ejecucionConveniosData]);
 
   // Datos completos de todos los convenios del documento
   const convenios: Convenio[] = [
@@ -502,14 +546,22 @@ export const ConveniosAnalysis: React.FC = () => {
     setSelectedYear("all");
   };
 
+
   const containerStyle: React.CSSProperties = {
     fontFamily:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    background: "linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)",
+    background: "linear-gradient(135deg, #ffd9b2 0%, #ffd9b2 100%)",
+    backgroundImage: "url('/INVÍAS_Colombia_logo.png')",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center center",
+    backgroundSize: "100%  100%",
+    backgroundAttachment: "fixed",
     minHeight: "100vh",
     padding: "24px",
     color: "#374151",
+    position: "relative",
   };
+
 
   const maxWidthStyle: React.CSSProperties = {
     maxWidth: "1200px",
@@ -721,13 +773,132 @@ export const ConveniosAnalysis: React.FC = () => {
     marginBottom: "24px",
   };
 
+  const sectionSubtitleStyle: React.CSSProperties = {
+    fontSize: "1.125rem",
+    fontWeight: "400",
+    color: "#1f2937",
+    marginBottom: "18px",
+  };
+
+  // Función para categorizar los convenios por tipo de inversión
+  const categorizarInversion = useMemo(() => {
+    const categorias = {
+      OPC: 0,
+      Dotación: 0,
+      Socialización: 0,
+      "OPC + Dotación": 0,
+    };
+
+    ejecucionConveniosData.forEach((convenio) => {
+      const descripcion = convenio.opcDotacion.toLowerCase();
+
+      if (descripcion.includes("opc") && descripcion.includes("dotación")) {
+        categorias["OPC + Dotación"] += convenio.valorEjecutado;
+      } else if (descripcion.includes("opc")) {
+        categorias["OPC"] += convenio.valorEjecutado;
+      } else if (descripcion.includes("dotación")) {
+        categorias["Dotación"] += convenio.valorEjecutado;
+      } else if (descripcion.includes("socialización")) {
+        categorias["Socialización"] += convenio.valorEjecutado;
+      } else {
+        // Si no se puede categorizar claramente, se considera socialización
+        categorias["Socialización"] += convenio.valorEjecutado;
+      }
+    });
+
+    return Object.entries(categorias)
+      .filter(([_, valor]) => valor > 0)
+      .map(([nombre, valor]) => ({
+        name: nombre,
+        value: valor,
+        porcentaje: (
+          (valor /
+            ejecucionConveniosData.reduce(
+              (sum, c) => sum + c.valorEjecutado,
+              0
+            )) *
+          100
+        ).toFixed(1),
+      }));
+  }, [ejecucionConveniosData]);
+
+  // Componente personalizado para el tooltip
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      return (
+        <div
+          style={{
+            backgroundColor: "white",
+            padding: "12px",
+            border: "1px solid #e2e8f0",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          <p style={{ margin: 0, fontWeight: "bold", color: "#1f2937" }}>
+            {data.payload.name}
+          </p>
+          <p
+            style={{ margin: "4px 0 0 0", color: "#059669", fontWeight: "600" }}
+          >
+            {formatCurrency(data.value)}
+          </p>
+          <p
+            style={{
+              margin: "2px 0 0 0",
+              color: "#6b7280",
+              fontSize: "0.875rem",
+            }}
+          >
+            {data.payload.porcentaje}% del total
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Colores para la gráfica de torta
+  const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+
+  // Filtrar gestión de interventorías
+  const filteredGestionInterventorias = useMemo(() => {
+    return gestionInterventorias.filter((item) => {
+      const matchesSearch =
+        searchTerm === "" ||
+        item.oac.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.municipio.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.convenio.includes(searchTerm) ||
+        item.interventoria.toLowerCase().includes(searchTerm.toLowerCase());
+
+      return matchesSearch;
+    });
+  }, [searchTerm]);
+
+  const getEntregaStatusColor = (entrega: string): string => {
+    if (entrega.includes("EI y EC")) return "#dc2626"; // Rojo - ambas faltantes
+    if (entrega.includes("EC")) return "#f59e0b"; // Naranja - solo cierre
+    if (entrega.includes("EI")) return "#3b82f6"; // Azul - solo inicio
+    return "#6b7280"; // Gris - sin especificar
+  };
+
+  const getEntregaStatusText = (entrega: string): string => {
+    if (entrega.includes("EI y EC")) return "Falta Inicio y Cierre";
+    if (entrega.includes("EC")) return "Falta Cierre";
+    if (entrega.includes("EI")) return "Falta Inicio";
+    return "Sin especificar";
+  };
+
   return (
     <div style={containerStyle}>
       <div style={maxWidthStyle}>
         {/* Header */}
         <div style={headerStyle}>
-          <h1 style={titleStyle}>Filtros de Convenios OAC</h1>
-          <p style={subtitleStyle}>Sistema de búsqueda y filtrado</p>
+          <h1 style={titleStyle}>
+            Informe Social Primer semestre convenios 2023-2024{" "}
+          </h1>
+          <p style={subtitleStyle}>DT ANTIOQUIA</p>
           <p style={subtitleSmallStyle}>
             Total de convenios en base de datos: {convenios.length}
           </p>
@@ -907,9 +1078,12 @@ export const ConveniosAnalysis: React.FC = () => {
         {/* Resultados */}
         <div style={cardStyle}>
           <h3 style={sectionTitleStyle}>
-            Convenios Filtrados ({stats.total} convenios)
+            1. Matriz de seguimiento - convenios 2023 ({stats.total} convenios)
           </h3>
 
+          <h5 style={sectionSubtitleStyle}>
+            1.1 Oficio con CNO de Inicio y Cierre
+          </h5>
           {filteredConvenios.length === 0 ? (
             <div style={noResultsStyle}>
               <Search
@@ -999,6 +1173,1316 @@ export const ConveniosAnalysis: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Resultados de convenios con CNO de Inicio y Cierre */}
+        <div style={cardStyle}>
+          <h5 style={sectionSubtitleStyle}>
+            1.2 Ejecución Recurso socioambiental - Convenios 2023 (
+            {filteredEjecucionConvenios.length} convenios)
+          </h5>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px",
+              padding: "12px 16px",
+              backgroundColor: "#f8fafc",
+              borderRadius: "8px",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            <div style={{ fontSize: "0.875rem", color: "#475569" }}>
+              <strong>Total ejecutado:</strong>{" "}
+              {formatCurrency(
+                filteredEjecucionConvenios.reduce(
+                  (sum, c) => sum + c.valorEjecutado,
+                  0
+                )
+              )}
+            </div>
+            <div style={{ fontSize: "0.875rem", color: "#475569" }}>
+              <strong>Municipios:</strong>{" "}
+              {
+                Array.from(
+                  new Set(filteredEjecucionConvenios.map((c) => c.municipio))
+                ).length
+              }
+            </div>
+          </div>
+
+          {filteredEjecucionConvenios.length === 0 ? (
+            <div style={noResultsStyle}>
+              <Search
+                size={48}
+                style={{ margin: "0 auto 16px", color: "#d1d5db" }}
+              />
+              <h3 style={{ fontSize: "1.125rem", marginBottom: "8px" }}>
+                No se encontraron convenios de ejecución
+              </h3>
+              <p style={{ fontSize: "0.875rem", color: "#9ca3af" }}>
+                Intenta ajustar los criterios de búsqueda
+              </p>
+            </div>
+          ) : (
+            <div style={resultsGridStyle}>
+              {filteredEjecucionConvenios.map((convenio) => (
+                <div
+                  key={`ejecucion-${convenio.id}`}
+                  style={convenioCardStyle}
+                  onClick={() => setSelectedEjecucionCard(convenio)}
+                  onMouseEnter={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    target.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+                    target.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    target.style.boxShadow =
+                      "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
+                    target.style.transform = "translateY(0)";
+                  }}
+                >
+                  <div style={convenioHeaderStyle}>
+                    <div style={{ flex: 1 }}>
+                      <div style={convenioTitleStyle}>{convenio.oac}</div>
+                      <div style={convenioLocationStyle}>
+                        <MapPin size={12} />
+                        <span>{convenio.municipio}</span>
+                      </div>
+                    </div>
+                    {convenio.linkCarpetas && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(convenio.linkCarpetas, "_blank");
+                        }}
+                        style={{
+                          background: "#3b82f6",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "8px",
+                          color: "white",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          fontSize: "12px",
+                          transition: "all 0.2s",
+                        }}
+                        onMouseEnter={(e) => {
+                          const target = e.currentTarget as HTMLElement;
+                          target.style.backgroundColor = "#2563eb";
+                        }}
+                        onMouseLeave={(e) => {
+                          const target = e.currentTarget as HTMLElement;
+                          target.style.backgroundColor = "#3b82f6";
+                        }}
+                      >
+                        <Folder size={14} />
+                        <ExternalLink size={12} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div style={convenioDetailsStyle}>
+                    <div style={detailRowStyle}>
+                      <span style={detailLabelStyle}>Convenio:</span>
+                      <span style={detailValueStyle}>{convenio.convenio}</span>
+                    </div>
+                    <div style={detailRowStyle}>
+                      <span style={detailLabelStyle}>Valor ejecutado:</span>
+                      <span
+                        style={{
+                          ...detailValueStyle,
+                          color: "#059669",
+                          fontWeight: "600",
+                        }}
+                      >
+                        {formatCurrency(convenio.valorEjecutado)}
+                      </span>
+                    </div>
+                    <div style={detailRowStyle}>
+                      <span style={detailLabelStyle}>OPC/Dotación:</span>
+                      <span
+                        style={{
+                          ...detailValueStyle,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          maxWidth: "180px",
+                        }}
+                      >
+                        {convenio.opcDotacion}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      padding: "4px 8px",
+                      borderRadius: "6px",
+                      fontSize: "0.75rem",
+                      fontWeight: "500",
+                      backgroundColor: "#dcfdf4",
+                      color: "#059669",
+                    }}
+                  >
+                    <CheckCircle size={12} />
+                    <span>Ejecutado</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Gráfica de distribución de inversión */}
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "12px",
+              padding: "24px",
+              marginBottom: "24px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "20px",
+              }}
+            >
+              <PieChart size={20} style={{ color: "#3b82f6" }} />
+              <h6
+                style={{
+                  fontSize: "1rem",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  margin: 0,
+                }}
+              >
+                Distribución de Inversión por Tipo de Actividad
+              </h6>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 300px",
+                gap: "24px",
+                alignItems: "center",
+              }}
+            >
+              <div style={{ height: "300px" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart>
+                    <Pie
+                      data={categorizarInversion}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, porcentaje }) =>
+                        `${name}: ${porcentaje}%`
+                      }
+                    >
+                      {categorizarInversion.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div>
+                <h6
+                  style={{
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    marginBottom: "12px",
+                  }}
+                >
+                  Resumen por Categoría
+                </h6>
+                {categorizarInversion.map((categoria, index) => (
+                  <div
+                    key={categoria.name}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "8px 0",
+                      borderBottom:
+                        index < categorizarInversion.length - 1
+                          ? "1px solid #f3f4f6"
+                          : "none",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          borderRadius: "2px",
+                          backgroundColor: COLORS[index % COLORS.length],
+                        }}
+                      ></div>
+                      <span style={{ fontSize: "0.875rem", color: "#374151" }}>
+                        {categoria.name}
+                      </span>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div
+                        style={{
+                          fontSize: "0.875rem",
+                          fontWeight: "600",
+                          color: "#1f2937",
+                        }}
+                      >
+                        {formatCurrency(categoria.value)}
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>
+                        {categoria.porcentaje}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Gestión interventorías pendientes de enviar entrega de cierre social */}
+        <div style={cardStyle}>
+          <h5 style={sectionSubtitleStyle}>
+            1.3 Gestión con interventorías pendientes de enviar entrega de
+            cierre social ({filteredGestionInterventorias.length} convenios)
+          </h5>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px",
+              padding: "12px 16px",
+              backgroundColor: "#fef3c7",
+              borderRadius: "8px",
+              border: "1px solid #f59e0b",
+            }}
+          >
+            <div style={{ fontSize: "0.875rem", color: "#92400e" }}>
+              <strong>⚠️ Convenios pendientes:</strong>{" "}
+              {filteredGestionInterventorias.length}
+            </div>
+            <div style={{ fontSize: "0.875rem", color: "#92400e" }}>
+              <strong>Interventorías:</strong>{" "}
+              {
+                Array.from(
+                  new Set(
+                    filteredGestionInterventorias.map((c) => c.interventoria)
+                  )
+                ).length
+              }
+            </div>
+          </div>
+
+          {filteredGestionInterventorias.length === 0 ? (
+            <div style={noResultsStyle}>
+              <AlertTriangle
+                size={48}
+                style={{ margin: "0 auto 16px", color: "#f59e0b" }}
+              />
+              <h3 style={{ fontSize: "1.125rem", marginBottom: "8px" }}>
+                No se encontraron convenios pendientes
+              </h3>
+              <p style={{ fontSize: "0.875rem", color: "#9ca3af" }}>
+                Intenta ajustar los criterios de búsqueda
+              </p>
+            </div>
+          ) : (
+            <div style={resultsGridStyle}>
+              {filteredGestionInterventorias.map((item) => (
+                <div
+                  key={`gestion-${item.id}`}
+                  style={{
+                    ...convenioCardStyle,
+                    borderColor: "#f59e0b",
+                    backgroundColor: "#fffbeb",
+                  }}
+                  onClick={() => setSelectedGestionCard(item)}
+                  onMouseEnter={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    target.style.boxShadow =
+                      "0 4px 12px rgba(245, 158, 11, 0.2)";
+                    target.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    const target = e.currentTarget as HTMLElement;
+                    target.style.boxShadow =
+                      "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
+                    target.style.transform = "translateY(0)";
+                  }}
+                >
+                  <div style={convenioHeaderStyle}>
+                    <div style={{ flex: 1 }}>
+                      <div style={convenioTitleStyle}>{item.oac}</div>
+                      <div style={convenioLocationStyle}>
+                        <MapPin size={12} />
+                        <span>{item.municipio}</span>
+                      </div>
+                    </div>
+                    {item.linkCarpeta && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(item.linkCarpeta, "_blank");
+                        }}
+                        style={{
+                          background: "#f59e0b",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "8px",
+                          color: "white",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          fontSize: "12px",
+                          transition: "all 0.2s",
+                        }}
+                        onMouseEnter={(e) => {
+                          const target = e.currentTarget as HTMLElement;
+                          target.style.backgroundColor = "#d97706";
+                        }}
+                        onMouseLeave={(e) => {
+                          const target = e.currentTarget as HTMLElement;
+                          target.style.backgroundColor = "#f59e0b";
+                        }}
+                        title="Abrir carpeta de gestión"
+                      >
+                        <Folder size={14} />
+                        <ExternalLink size={12} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div style={convenioDetailsStyle}>
+                    <div style={detailRowStyle}>
+                      <span style={detailLabelStyle}>Convenio:</span>
+                      <span style={detailValueStyle}>{item.convenio}</span>
+                    </div>
+                    <div style={detailRowStyle}>
+                      <span style={detailLabelStyle}>Interventoría:</span>
+                      <span
+                        style={{
+                          ...detailValueStyle,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          maxWidth: "150px",
+                        }}
+                      >
+                        {item.interventoria}
+                      </span>
+                    </div>
+                    <div style={detailRowStyle}>
+                      <span style={detailLabelStyle}>No. Contrato:</span>
+                      <span style={detailValueStyle}>
+                        {item.numeroContrato}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      padding: "4px 8px",
+                      borderRadius: "6px",
+                      fontSize: "0.75rem",
+                      fontWeight: "500",
+                      backgroundColor: getEntregaStatusColor(
+                        item.entregaFaltante
+                      ),
+                      color: "white",
+                    }}
+                  >
+                    <AlertTriangle size={12} />
+                    <span>{getEntregaStatusText(item.entregaFaltante)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Gestión interventorías pendientes de enviar entrega de cierre social */}
+
+        <div style={cardStyle}>
+          <h3 style={sectionTitleStyle}>4. CAPACITACIONES</h3>
+
+          <h5 style={sectionSubtitleStyle}>
+            Según lo identificado por las Juntas de Acción Comunal, la
+            comunidad, el personal de la OAC y de interventoría, se sugiere,
+            desde la Dirección Territorial Antioquia, impartir capacitaciones
+            tanto al personal del contrato de obra como al equipo de
+            interventoría. Estas jornadas formativas deberán abordar aspectos
+            contables, ambientales, técnicos y de Seguridad y Salud en el
+            Trabajo, con especial énfasis en los temas contables y ambientales.
+            Aunque actualmente el contrato de interventoría para los convenios
+            de vigencia 2024 se encuentra suspendido, se recomienda que, al
+            reanudarse dicho contrato, se inicie de inmediato este proceso de
+            capacitación
+          </h5>
+
+          {/* Datos de capacitaciones */}
+          {(() => {
+            const capacitacionesData = [
+              {
+                municipio: "APARTADO",
+                capacitacionGeneral: [
+                  { oac: "OAC LA MIRANDA", convenio: "4039-2024" },
+                ],
+                liquidacion: [{ oac: "OAC SAN MIGUEL", convenio: "2689-2024" }],
+              },
+              {
+                municipio: "CHIGORODÓ",
+                capacitacionGeneral: [
+                  { oac: "OAC GUAPAS LAS MERCEDES", convenio: "2674-2024" },
+                ],
+                liquidacion: [
+                  { oac: "OAC LAS GUAGUAS", convenio: "2633-2024" },
+                ],
+              },
+              {
+                municipio: "SAN PEDRO DE URABÁ",
+                capacitacionGeneral: [
+                  { oac: "OAC ZAPINDONGA ARRIBA", convenio: "2258-2024" },
+                ],
+                liquidacion: [
+                  { oac: "OAC EL AJI", convenio: "2457-2024" },
+                  { oac: "OAC EL TOMATE", convenio: "2439-2024" },
+                ],
+              },
+              {
+                municipio: "TURBO",
+                capacitacionGeneral: [
+                  { oac: "COMUNIDAD INDIGENA EL MANGO", convenio: "2273-2024" },
+                ],
+                liquidacion: [
+                  { oac: "OAC CORREGIMIENTO EL DOS", convenio: "2538-2024" },
+                  { oac: "OAC NUEVA COLOMBIA", convenio: "2531-2024" },
+                ],
+              },
+              {
+                municipio: "SANTA FE DE ANTIOQUIA",
+                capacitacionGeneral: [
+                  { oac: "OAC EL PESCADO", convenio: "3538-2024" },
+                  { oac: "OAC PEDREGAL", convenio: "3778-2024" },
+                  { oac: "OAC MORADITAS", convenio: "3574-2024" },
+                ],
+                liquidacion: [],
+              },
+              {
+                municipio: "COCORNA",
+                capacitacionGeneral: [
+                  { oac: "OAC SANTA BARBARA", convenio: "3746-2024" },
+                ],
+                liquidacion: [],
+              },
+              {
+                municipio: "SAN LUIS",
+                capacitacionGeneral: [
+                  { oac: "OAC BUENOS AIRES", convenio: "3765-2024" },
+                ],
+                liquidacion: [],
+              },
+              {
+                municipio: "SONSÓN",
+                capacitacionGeneral: [
+                  { oac: "OAC ALTO DE SABANAS", convenio: "3582-2024" },
+                ],
+                liquidacion: [],
+              },
+              {
+                municipio: "CAUCASIA",
+                capacitacionGeneral: [
+                  { oac: "OAC URBANIZACIÓN EL OASIS", convenio: "2341-2024" },
+                ],
+                liquidacion: [],
+              },
+              {
+                municipio: "GRANADA",
+                capacitacionGeneral: [
+                  { oac: "OAC LOS MEDIOS", convenio: "3521-2024" },
+                ],
+                liquidacion: [],
+              },
+              {
+                municipio: "SAN CARLOS",
+                capacitacionGeneral: [
+                  { oac: "OAC LA VILLA", convenio: "3626-2024" },
+                  { oac: "OAC LA HONDITA", convenio: "3782-2024" },
+                ],
+                liquidacion: [],
+              },
+              {
+                municipio: "URRAO",
+                capacitacionGeneral: [
+                  { oac: "OAC EL TUNAL", convenio: "2273-2024" },
+                ],
+                liquidacion: [
+                  { oac: "LA MATANZA", convenio: "2181-2024" },
+                  { oac: "LA QUIEBRA", convenio: "2759-2024" },
+                ],
+              },
+              {
+                municipio: "DABEIBA",
+                capacitacionGeneral: [
+                  { oac: "OAC CALICHE CAMPARRUSIA", convenio: "4392-2024" },
+                  { oac: "OAC LA BALSITA", convenio: "4394-2024" },
+                  { oac: "OAC EL BALSO", convenio: "4366-2024" },
+                  { oac: "OAC LLANOGRANDE", convenio: "4393-2024" },
+                ],
+                liquidacion: [
+                  { oac: "OAC LOS NARANJOS", convenio: "2104-2024" },
+                ],
+              },
+              {
+                municipio: "VIGÍA DEL FUERTE",
+                capacitacionGeneral: [
+                  { oac: "OAC SAN MIGUEL", convenio: "4029-2024" },
+                  { oac: "OAC VILLA NUEVA", convenio: "4074-2024" },
+                  {
+                    oac: "RESGUARDO INGIDENA EL SALADO",
+                    convenio: "4219-2024",
+                  },
+                  {
+                    oac: "RESGUARDO INDIGENA GUAGUANDO",
+                    convenio: "4216-2024",
+                  },
+                  { oac: "RESGUARDO INDIGENA JARAPETÓ", convenio: "4196-2024" },
+                ],
+                liquidacion: [],
+              },
+              {
+                municipio: "MUTATÁ",
+                capacitacionGeneral: [
+                  { oac: "OAC CHADO ARRIBA", convenio: "2742-2024" },
+                ],
+                liquidacion: [{ oac: "OAC CAUCHERAS", convenio: "2706-2024" }],
+              },
+              {
+                municipio: "ARBOLETES",
+                capacitacionGeneral: [],
+                liquidacion: [
+                  { oac: "OAC LA VEJEZ", convenio: "2331-2024" },
+                  { oac: "OAC LAS NARANJITAS", convenio: "2348-2024" },
+                  { oac: "OAC GUADUAL ABAJO", convenio: "2580-2024" },
+                ],
+              },
+              {
+                municipio: "CÁCERES",
+                capacitacionGeneral: [],
+                liquidacion: [{ oac: "OAC NICARAGUA", convenio: "2409-2025" }],
+              },
+              {
+                municipio: "CAREPA",
+                capacitacionGeneral: [],
+                liquidacion: [
+                  { oac: "OAC LA ESMERALDA", convenio: "2319-2024" },
+                  { oac: "OAC LAS FLORES", convenio: "3041-2024" },
+                  { oac: "OAC EL SILENCIO", convenio: "2377-2024" },
+                ],
+              },
+              {
+                municipio: "EL BAGRE",
+                capacitacionGeneral: [],
+                liquidacion: [
+                  { oac: "OAC VILLA CHICA ABAJO", convenio: "2404-2024" },
+                ],
+              },
+              {
+                municipio: "NECOCLÍ",
+                capacitacionGeneral: [],
+                liquidacion: [
+                  { oac: "OAC EL TOTUMO", convenio: "2591-2024" },
+                  { oac: "OAC VILLA ISABEL", convenio: "2587-2024" },
+                  { oac: "OAC BOCAS DE IGUANA", convenio: "2553-2024" },
+                ],
+              },
+              {
+                municipio: "SAN FRANCISCO",
+                capacitacionGeneral: [],
+                liquidacion: [
+                  { oac: "OAC LA MARAVILLA", convenio: "2128-2024" },
+                ],
+              },
+              {
+                municipio: "SAN JUAN DE  URABÁ",
+                capacitacionGeneral: [],
+                liquidacion: [
+                  { oac: "OAC  MONTECRISTO", convenio: "2310-2024" },
+                  { oac: "OAC UVEROS", convenio: "2443-2024" },
+                  { oac: "OAC ENTRASIPUEDES", convenio: "2448-2024" },
+                ],
+              },
+              {
+                municipio: "TOLEDO",
+                capacitacionGeneral: [],
+                liquidacion: [{ oac: "OAC BIOGUI", convenio: "2405-2024" }],
+              },
+              {
+                municipio: "URAMITA",
+                capacitacionGeneral: [],
+                liquidacion: [{ oac: "OAC EL MADERO", convenio: "2313-2024" }],
+              },
+            ];
+
+            return (
+              <div>
+                {/* Resumen de capacitaciones */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                    gap: "16px",
+                    marginBottom: "24px",
+                  }}
+                >
+                  <div
+                    style={{
+                      ...statCardStyle,
+                      backgroundColor: "#dbeafe",
+                      border: "1px solid #3b82f6",
+                    }}
+                  >
+                    <div style={{ ...statNumberStyle, color: "#1d4ed8" }}>
+                      {capacitacionesData.reduce(
+                        (sum, m) => sum + m.capacitacionGeneral.length,
+                        0
+                      )}
+                    </div>
+                    <div style={statLabelStyle}>Capacitación General</div>
+                    <div
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#6b7280",
+                        marginTop: "4px",
+                      }}
+                    >
+                      Contables, SST, Ambientales, Técnicos
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      ...statCardStyle,
+                      backgroundColor: "#dcfdf4",
+                      border: "1px solid #10b981",
+                    }}
+                  >
+                    <div style={{ ...statNumberStyle, color: "#047857" }}>
+                      {capacitacionesData.reduce(
+                        (sum, m) => sum + m.liquidacion.length,
+                        0
+                      )}
+                    </div>
+                    <div style={statLabelStyle}>Liquidación de Convenios</div>
+                  </div>
+                </div>
+
+                {/* Cards por municipio */}
+                <div style={resultsGridStyle}>
+                  {capacitacionesData.map((municipioData, index) => (
+                    <div
+                      key={`capacitacion-${index}`}
+                      style={{
+                        ...convenioCardStyle,
+                        borderColor: "#e5e7eb",
+                        backgroundColor: "#ffffff",
+                      }}
+                    >
+                      <div style={{ marginBottom: "16px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          <MapPin size={16} style={{ color: "#3b82f6" }} />
+                          <h6
+                            style={{
+                              fontSize: "1rem",
+                              fontWeight: "600",
+                              color: "#1f2937",
+                              margin: 0,
+                            }}
+                          >
+                            {municipioData.municipio}
+                          </h6>
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>
+                          {municipioData.capacitacionGeneral.length +
+                            municipioData.liquidacion.length}{" "}
+                          OAC total
+                        </div>
+                      </div>
+
+                      {/* Capacitación General */}
+                      {municipioData.capacitacionGeneral.length > 0 && (
+                        <div style={{ marginBottom: "16px" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "8px",
+                                height: "8px",
+                                borderRadius: "50%",
+                                backgroundColor: "#3b82f6",
+                              }}
+                            ></div>
+                            <span
+                              style={{
+                                fontSize: "0.875rem",
+                                fontWeight: "500",
+                                color: "#1f2937",
+                              }}
+                            >
+                              Capacitación General (
+                              {municipioData.capacitacionGeneral.length})
+                            </span>
+                          </div>
+                          <div style={{ paddingLeft: "14px" }}>
+                            {municipioData.capacitacionGeneral.map(
+                              (item, idx) => (
+                                <div
+                                  key={`general-${idx}`}
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    marginBottom: "4px",
+                                    color: "#374151",
+                                  }}
+                                >
+                                  <div style={{ fontWeight: "500" }}>
+                                    {item.oac}
+                                  </div>
+                                  <div style={{ color: "#6b7280" }}>
+                                    Convenio: {item.convenio}
+                                  </div>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Liquidación */}
+                      {municipioData.liquidacion.length > 0 && (
+                        <div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "8px",
+                                height: "8px",
+                                borderRadius: "50%",
+                                backgroundColor: "#10b981",
+                              }}
+                            ></div>
+                            <span
+                              style={{
+                                fontSize: "0.875rem",
+                                fontWeight: "500",
+                                color: "#1f2937",
+                              }}
+                            >
+                              Liquidación ({municipioData.liquidacion.length})
+                            </span>
+                          </div>
+                          <div style={{ paddingLeft: "14px" }}>
+                            {municipioData.liquidacion.map((item, idx) => (
+                              <div
+                                key={`liquidacion-${idx}`}
+                                style={{
+                                  fontSize: "0.75rem",
+                                  marginBottom: "4px",
+                                  color: "#374151",
+                                }}
+                              >
+                                <div style={{ fontWeight: "500" }}>
+                                  {item.oac}
+                                </div>
+                                <div style={{ color: "#6b7280" }}>
+                                  Convenio: {item.convenio}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Si no tiene ningún tipo de capacitación */}
+                      {municipioData.capacitacionGeneral.length === 0 &&
+                        municipioData.liquidacion.length === 0 && (
+                          <div
+                            style={{
+                              textAlign: "center",
+                              padding: "16px",
+                              color: "#9ca3af",
+                              fontSize: "0.875rem",
+                              fontStyle: "italic",
+                            }}
+                          >
+                            Sin capacitaciones programadas
+                          </div>
+                        )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Modal de Detalles para Ejecución */}
+        {selectedEjecucionCard && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px",
+              zIndex: 50,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "white",
+                borderRadius: "12px",
+                maxWidth: "800px",
+                width: "100%",
+                maxHeight: "90vh",
+                overflowY: "auto",
+              }}
+            >
+              <div style={{ padding: "24px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: "24px",
+                  }}
+                >
+                  <div>
+                    <h2
+                      style={{
+                        fontSize: "1.5rem",
+                        fontWeight: "bold",
+                        color: "#1f2937",
+                      }}
+                    >
+                      {selectedEjecucionCard.oac}
+                    </h2>
+                    <p style={{ color: "#6b7280" }}>
+                      {selectedEjecucionCard.municipio}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedEjecucionCard(null)}
+                    style={{
+                      color: "#6b7280",
+                      fontSize: "1.5rem",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                    gap: "24px",
+                    marginBottom: "24px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "16px",
+                    }}
+                  >
+                    <div>
+                      <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                        Número de Convenio
+                      </p>
+                      <p style={{ fontWeight: "500", fontSize: "1.125rem" }}>
+                        {selectedEjecucionCard.convenio}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                        Valor Ejecutado
+                      </p>
+                      <p
+                        style={{
+                          fontWeight: "600",
+                          fontSize: "1.25rem",
+                          color: "#059669",
+                        }}
+                      >
+                        {formatCurrency(selectedEjecucionCard.valorEjecutado)}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                        Link a Carpetas
+                      </p>
+                      {selectedEjecucionCard.linkCarpetas ? (
+                        <button
+                          onClick={() =>
+                            window.open(
+                              selectedEjecucionCard.linkCarpetas,
+                              "_blank"
+                            )
+                          }
+                          style={{
+                            background: "#3b82f6",
+                            border: "none",
+                            borderRadius: "8px",
+                            padding: "8px 16px",
+                            color: "white",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            marginTop: "4px",
+                          }}
+                        >
+                          <Folder size={16} />
+                          <span>Abrir carpeta</span>
+                          <ExternalLink size={14} />
+                        </button>
+                      ) : (
+                        <p style={{ color: "#9ca3af", fontStyle: "italic" }}>
+                          No disponible
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "16px",
+                    }}
+                  >
+                    <div>
+                      <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                        Estado
+                      </p>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          fontSize: "0.875rem",
+                          fontWeight: "500",
+                          backgroundColor: "#dcfdf4",
+                          color: "#059669",
+                          width: "fit-content",
+                          marginTop: "4px",
+                        }}
+                      >
+                        <CheckCircle size={16} />
+                        <span>Ejecutado</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <p
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "#6b7280",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    OPC/Dotación/Socializaciones
+                  </p>
+                  <div
+                    style={{
+                      padding: "16px",
+                      backgroundColor: "#f8fafc",
+                      borderRadius: "8px",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <p style={{ fontWeight: "500", lineHeight: "1.6" }}>
+                      {selectedEjecucionCard.opcDotacion}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Detalles para Gestión */}
+        {selectedGestionCard && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px",
+              zIndex: 50,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "white",
+                borderRadius: "12px",
+                maxWidth: "800px",
+                width: "100%",
+                maxHeight: "90vh",
+                overflowY: "auto",
+              }}
+            >
+              <div style={{ padding: "24px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: "24px",
+                  }}
+                >
+                  <div>
+                    <h2
+                      style={{
+                        fontSize: "1.5rem",
+                        fontWeight: "bold",
+                        color: "#1f2937",
+                      }}
+                    >
+                      {selectedGestionCard.oac}
+                    </h2>
+                    <p style={{ color: "#6b7280" }}>
+                      {selectedGestionCard.municipio}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedGestionCard(null)}
+                    style={{
+                      color: "#6b7280",
+                      fontSize: "1.5rem",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                    gap: "24px",
+                    marginBottom: "24px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "16px",
+                    }}
+                  >
+                    <div>
+                      <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                        Número de Convenio
+                      </p>
+                      <p style={{ fontWeight: "500", fontSize: "1.125rem" }}>
+                        {selectedGestionCard.convenio}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                        Interventoría
+                      </p>
+                      <p style={{ fontWeight: "500" }}>
+                        {selectedGestionCard.interventoria}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                        No. Contrato
+                      </p>
+                      <p style={{ fontWeight: "500" }}>
+                        {selectedGestionCard.numeroContrato}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "16px",
+                    }}
+                  >
+                    <div>
+                      <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                        Entrega Faltante
+                      </p>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          fontSize: "0.875rem",
+                          fontWeight: "500",
+                          backgroundColor: getEntregaStatusColor(
+                            selectedGestionCard.entregaFaltante
+                          ),
+                          color: "white",
+                          width: "fit-content",
+                          marginTop: "4px",
+                        }}
+                      >
+                        <AlertTriangle size={16} />
+                        <span>
+                          {getEntregaStatusText(
+                            selectedGestionCard.entregaFaltante
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    {selectedGestionCard.linkCarpeta && (
+                      <div>
+                        <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                          Carpeta de Gestión
+                        </p>
+                        <button
+                          onClick={() =>
+                            window.open(
+                              selectedGestionCard.linkCarpeta,
+                              "_blank"
+                            )
+                          }
+                          style={{
+                            background: "#f59e0b",
+                            border: "none",
+                            borderRadius: "8px",
+                            padding: "8px 16px",
+                            color: "white",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            marginTop: "4px",
+                          }}
+                        >
+                          <Folder size={16} />
+                          <span>Abrir carpeta</span>
+                          <ExternalLink size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <p
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "#6b7280",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Gestión Realizada desde la DT Antioquia
+                  </p>
+                  <div
+                    style={{
+                      padding: "16px",
+                      backgroundColor: "#fef3c7",
+                      borderRadius: "8px",
+                      border: "1px solid #f59e0b",
+                    }}
+                  >
+                    <p style={{ fontWeight: "500", lineHeight: "1.6" }}>
+                      {selectedGestionCard.gestionRealizada}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Modal de Detalles */}
         {selectedCard && (
@@ -1138,13 +2622,17 @@ export const ConveniosAnalysis: React.FC = () => {
                       <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
                         Tipo Radicado
                       </p>
-                      <p style={{ fontWeight: "500" }}>{selectedCard.tipoRadicado}</p>
+                      <p style={{ fontWeight: "500" }}>
+                        {selectedCard.tipoRadicado}
+                      </p>
                     </div>
                     <div>
                       <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
                         No. Radicado
                       </p>
-                      <p style={{ fontWeight: "500" }}>{selectedCard.radicado}</p>
+                      <p style={{ fontWeight: "500" }}>
+                        {selectedCard.radicado}
+                      </p>
                     </div>
                   </div>
                 </div>
