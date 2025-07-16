@@ -18,6 +18,7 @@ interface Convenio {
   interventoria: string;
   numeroInterventoria: string;
   radicado: string;
+  tipoRadicado: string;
   observaciones: string;
   status:
     | "requiere_alcance"
@@ -51,6 +52,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Jesús Orlando Vivas",
       numeroInterventoria: "4843",
       radicado: "2024S-VBOG-093243",
+      tipoRadicado: "R-EI",
       observaciones:
         "Tiene incorrecto el nombre de la OAC (Esta los nombres de Puerto Perales y Puerto Pita, debería de ser Vereda La Carlota, Vereda La Palestina)",
       status: "requiere_alcance",
@@ -64,6 +66,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Jesús Orlando Vivas",
       numeroInterventoria: "4843",
       radicado: "2024S-VBOG-093243",
+      tipoRadicado: "R-EI",
       observaciones:
         "Tiene incorrecto el nombre de la OAC (Esta los nombres de Puerto Perales y Puerto Pita, debería de ser Vereda La Carlota, Vereda La Palestina)",
       status: "requiere_alcance",
@@ -76,7 +79,8 @@ export const ConveniosAnalysis: React.FC = () => {
       convenio: "3713-2023",
       interventoria: "Interproyectos",
       numeroInterventoria: "5023",
-      radicado: "R-EI: 2024S-VBOG-063349 R-EC: 2024S-VBOG-088068",
+      radicado: "R-EI: 2024S-VBOG-063349 \nR-EC: 2024S-VBOG-088068",
+      tipoRadicado: "R-EI y R-EC",
       observaciones:
         'R- EI: Tiene malo el nombre del municipio, dice CAICEDO y es EL BAGRE. \n R- EC: NO REQUIERE ALCANCE, PERO EN EL OFICIO INDICAN "Que, una vez revisado el informe de cierre social, comprendido por el balance de estado social de proyecto, formato MASPS-MN1-IN-3-FR-2, PIS V2, así como por sus formatos concomitantes, entrega de OPC " Y ALLI NO SE HIZO OPC',
       status: "requiere_alcance",
@@ -90,6 +94,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Interproyectos",
       numeroInterventoria: "5039",
       radicado: "2024S-VBOG-063284",
+      tipoRadicado: "R-EI",
       observaciones: "En el párrafo 4 menciona otro número de convenio",
       status: "requiere_alcance",
       year: 2023,
@@ -102,6 +107,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Pablo Cesar Murcia",
       numeroInterventoria: "4506",
       radicado: "2024S-VBOG-099732",
+      tipoRadicado: "R-EI y R-EC",
       observaciones:
         "REQUIERE ALCANCE (1. El objeto del convenio es incorrecto, menciona otras OAC. \n2. En el párrafo 4 en donde dan CNO mencionan otros números de convenios)",
       status: "requiere_alcance",
@@ -110,11 +116,12 @@ export const ConveniosAnalysis: React.FC = () => {
     {
       id: 6,
       oac: "Vereda Chagualo Abajo",
-      municipio: "Sin especificar",
+      municipio: "Anorí",
       convenio: "4130-2023",
-      interventoria: "",
-      numeroInterventoria: "",
-      radicado: "",
+      interventoria: "Pablo Cesar Murcia",
+      numeroInterventoria: "4506",
+      radicado: "2024S-VBOG-099732",
+      tipoRadicado: "R-EI y R-EC",
       observaciones: "Información incompleta en el documento original",
       status: "requiere_alcance",
       year: 2023,
@@ -127,6 +134,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Zaida Orjuela",
       numeroInterventoria: "4498",
       radicado: "2024S-VBOG-082014",
+      tipoRadicado: "R-EI y R-EC",
       observaciones:
         "REQUIERE ALCANCE (En el oficio no emiten CNO a la entrega de inicio, solo emiten CNO a la de cierre, y de cierre no anexan muchos soportes)",
       status: "requiere_alcance",
@@ -139,7 +147,8 @@ export const ConveniosAnalysis: React.FC = () => {
       convenio: "3553-2023",
       interventoria: "James Kamerer",
       numeroInterventoria: "5062",
-      radicado: "R-EI: 2024S-VBOG-044800 R-EC: 2024S-VBOG-089161",
+      radicado: "R-EI: 2024S-VBOG-044800 \nR-EC: 2024S-VBOG-089161",
+      tipoRadicado: "R-EI y R-EC",
       observaciones:
         'EI: PUEDE REQUERIR ALCANCE (Tiene malo el número del convenio en el siguiente párrafo: ". Formato MASPS-MN1-IN-3-FR-5 actualizado con las cotizaciones correspondientes V3 del convenio 3493 de 2023") \nEC: REQUIERE ALCANCE (Tiene mal el nombre de la OAC en el objeto del convenio)',
       status: "puede_requerir",
@@ -153,6 +162,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "James Alberto Kammerer",
       numeroInterventoria: "5062",
       radicado: "2024S-VBOG-032286",
+      tipoRadicado: "R-EI",
       observaciones:
         "REQUIERE ALCANCE (No mencionan el nombre de la OAC, numero de convenio y objeto del convenio)",
       status: "requiere_alcance",
@@ -166,6 +176,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Construmar",
       numeroInterventoria: "4567",
       radicado: "2024S-VBOG-038049",
+      tipoRadicado: "R-EI",
       observaciones:
         "REQUIERE ALCANCE (ESTA MAL EL NUMERO DEL CONVENIO, tiene el 3329 y es el 3229-2023)",
       status: "requiere_alcance",
@@ -179,6 +190,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Construmar",
       numeroInterventoria: "4567",
       radicado: "2024S-VBOG-038049",
+      tipoRadicado: "R-EI",
       observaciones:
         "REQUIERE ALCANCE (ESTA MAL EL NUMERO DEL CONVENIO, tiene el 346 y es el 3346-2023)",
       status: "requiere_alcance",
@@ -192,6 +204,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Constructores H&G 4370",
       numeroInterventoria: "4370",
       radicado: "2024S-VBOG-079763",
+      tipoRadicado: "R-EC",
       observaciones:
         "REQUIERE ALCANCE (TIENE MALO EL NUMERO DEL CONVENIO DEL 3673-2023, en el oficio esta el 3663)",
       status: "requiere_alcance",
@@ -205,6 +218,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Construmaj",
       numeroInterventoria: "5066",
       radicado: "2024S-VBOG-054500",
+      tipoRadicado: "R-EI",
       observaciones:
         "REQUIERE ALCANCE (1. No tiene el número del convenio. \n2. Tiene incorrecto el objeto del convenio, mencionan otra OAC y municipio)",
       status: "requiere_alcance",
@@ -218,6 +232,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Construmaj",
       numeroInterventoria: "5066",
       radicado: "2024S-VBOG-059554",
+      tipoRadicado: "R-EI",
       observaciones:
         "REQUIERE ALCANCE (Tiene incorrecto el número de contrato de interventoría y el número de convenio)",
       status: "requiere_alcance",
@@ -231,6 +246,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Leyalí",
       numeroInterventoria: "4420",
       radicado: "2024S-VBOG-056213",
+      tipoRadicado: "R-EI",
       observaciones:
         "POSIBLEMENTE REQUIERA DE ALCANCE (En esta entrega la interventoría remite tanto las subsanaciones correspondientes a la entrega inicial como la totalidad de los documentos de la entrega de cierre. \nSin embargo, en la respuesta emitida por SS únicamente se menciona el No Objeción respecto a los formatos de cierre, sin hacer referencia al No objeción de los documentos correspondientes a la Entrega inicial)",
       status: "posible_alcance",
@@ -244,6 +260,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Leyalí",
       numeroInterventoria: "4420",
       radicado: "2024S-VBOG-047193",
+      tipoRadicado: "R-EI",
       observaciones:
         "POSIBLEMENTE SE DEBA DE HACER UN ALCANCE (En esta entrega la interventoría remite tanto las subsanaciones correspondientes a la entrega inicial como la totalidad de los documentos de la entrega de cierre. \nSin embargo, en la respuesta emitida por SS únicamente se menciona el No Objeción respecto a los formatos de cierre, sin hacer referencia al No objeción de los documentos correspondientes a la Entrega inicial)",
       status: "posible_alcance",
@@ -257,6 +274,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Leyalí",
       numeroInterventoria: "4573",
       radicado: "2024S-VBOG-078672",
+      tipoRadicado: "R-EI",
       observaciones:
         "POSIBLEMENTE REQUIERA ALCANCE (En la entrega realizada por la interventoría se incluyen tanto los documentos correspondientes a la Entrega inicial como los de la Entrega de Cierre. \nNo obstante, en la respuesta emitida por SS únicamente emite concepto de No Objeción sobre los formatos de cierre, y se menciona de forma general el concepto de No Objeción a la documentación del convenio, sin especificar claramente si este abarca tanto la entrega inicial como la de cierre)",
       status: "posible_alcance",
@@ -270,6 +288,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Interproyectos",
       numeroInterventoria: "5023",
       radicado: "2024S-VBOG-088068",
+      tipoRadicado: "R-EI",
       observaciones:
         'NO REQUIERE ALCANCE, PERO EN EL OFICIO INDICAN "Que, una vez revisado el informe de cierre social, comprendido por el balance de estado social de proyecto, formato MASPS-MN1-IN-3-FR-2, PIS V2, así como por sus formatos concomitantes, entrega de OPC " Y ALLI NO SE HIZO OPC',
       status: "no_requiere",
@@ -283,6 +302,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "James Alberto Kammerer",
       numeroInterventoria: "5062",
       radicado: "2024S-VBOG-044799",
+      tipoRadicado: "R-EI",
       observaciones:
         'PUEDE REQUERIR ALCANCE (Tiene malo el número del convenio en el siguiente párrafo: "Formato MASPS-MN1-IN-3-FR-5 actualizado con las cotizaciones correspondientes V3 del convenio 3493 de 2023")',
       status: "puede_requerir",
@@ -296,6 +316,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Consorcio Yiwu",
       numeroInterventoria: "3563",
       radicado: "2025S-VBOG-003836",
+      tipoRadicado: "R-EI",
       observaciones:
         "REQUIERE ALCANCE (Esta incorrecto el número del convenio, en el oficio está el número 2766 y es el 2706)",
       status: "requiere_alcance",
@@ -309,6 +330,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Consorcio Yiwu",
       numeroInterventoria: "3563",
       radicado: "2025S-VBOG-004340",
+      tipoRadicado: "R-EI",
       observaciones:
         "REQUIERE ALCANCE (tiene el No. convenio incorrecto, EN EL OFICIO ETA EL NUMERO 2951 y es el 2591)",
       status: "requiere_alcance",
@@ -322,6 +344,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Consorcio Yiwu",
       numeroInterventoria: "3563",
       radicado: "2025S-VBOG-009811",
+      tipoRadicado: "R-EI (PIS V.3)",
       observaciones:
         "REQUIERE ALCANCE (En la respuesta de SS tiene el No. convenio incorrecto, en el oficio está el número 2353 y es el 2553. Además, dicen que dan CNO de PIS V1 y se envió V.3)",
       status: "requiere_alcance",
@@ -335,6 +358,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Consorcio YIWU",
       numeroInterventoria: "3563",
       radicado: "2025S-VBOG-003839",
+      tipoRadicado: "R-EI",
       observaciones:
         "REQUIERE ALCANCE (TIENE EL OBJETO DE CONVENIO MALO, MENCIONA LA OAC CAUCHERAS)",
       status: "requiere_alcance",
@@ -348,6 +372,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Consorcio Yiwu",
       numeroInterventoria: "3563",
       radicado: "2025S-VBOG-003837",
+      tipoRadicado: "R-EI",
       observaciones:
         "REQUIERE ALCANCE (En la primera entrega en los soportes del PIS tienen malo el nombre de la junta. En la respuesta de SS tiene el No. convenio y el nombre de la JAC incorrecto, en el oficio está el nombre de la OAC Caucheras y debe de ser la de ENTRASIPUEDES). \nEn la respuesta de SS del PIS V.3 no especifican nombre de la JAC ni No. de convenio)",
       status: "requiere_alcance",
@@ -361,6 +386,7 @@ export const ConveniosAnalysis: React.FC = () => {
       interventoria: "Consorcio Yiwu",
       numeroInterventoria: "3563",
       radicado: "2024S-VBOG-096894",
+      tipoRadicado: "R-EI",
       observaciones:
         "REQUIERE ALCANCE (TIENE EL NUMERO DE CONVENIO INCORRECTO EN EL PARRAFO 2 EN EL ULTIMO RENGLÓN ESTA EL 4755 Y ES EL 2405)",
       status: "requiere_alcance",
@@ -1107,6 +1133,18 @@ export const ConveniosAnalysis: React.FC = () => {
                           {getStatusText(selectedCard.status)}
                         </span>
                       </div>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                        Tipo Radicado
+                      </p>
+                      <p style={{ fontWeight: "500" }}>{selectedCard.tipoRadicado}</p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                        No. Radicado
+                      </p>
+                      <p style={{ fontWeight: "500" }}>{selectedCard.radicado}</p>
                     </div>
                   </div>
                 </div>
