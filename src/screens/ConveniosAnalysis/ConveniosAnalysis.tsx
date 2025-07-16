@@ -721,13 +721,22 @@ export const ConveniosAnalysis: React.FC = () => {
     marginBottom: "24px",
   };
 
+  const sectionSubtitleStyle: React.CSSProperties = {
+    fontSize: "1.125rem",
+    fontWeight: "400",
+    color: "#1f2937",
+    marginBottom: "18px",
+  };
+
+  
+
   return (
     <div style={containerStyle}>
       <div style={maxWidthStyle}>
         {/* Header */}
         <div style={headerStyle}>
-          <h1 style={titleStyle}>Filtros de Convenios OAC</h1>
-          <p style={subtitleStyle}>Sistema de búsqueda y filtrado</p>
+          <h1 style={titleStyle}>Informe Social Primer semestre convenios 2023-2024 </h1>
+          <p style={subtitleStyle}>DT ANTIOQUIA</p>
           <p style={subtitleSmallStyle}>
             Total de convenios en base de datos: {convenios.length}
           </p>
@@ -907,9 +916,12 @@ export const ConveniosAnalysis: React.FC = () => {
         {/* Resultados */}
         <div style={cardStyle}>
           <h3 style={sectionTitleStyle}>
-            Convenios Filtrados ({stats.total} convenios)
+            1. Matriz de seguimiento - convenios 2023 ({stats.total} convenios)
           </h3>
 
+          <h5 style={sectionSubtitleStyle}>
+            1.1 Oficio con CNO de Inicio y Cierre
+          </h5>
           {filteredConvenios.length === 0 ? (
             <div style={noResultsStyle}>
               <Search
